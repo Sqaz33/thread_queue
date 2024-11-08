@@ -7,12 +7,11 @@
 #include <queue>
 #include <thread>
 
-
 namespace thread_queue {
 
 using task_t = std::move_only_function<int()>;
 
-class thread_queue {
+class UnboundedQueue {
 public:
     bool empty() const noexcept;
 
@@ -27,6 +26,37 @@ private:
     std::condition_variable condCons_;
     std::queue<task_t> queue_;
 };
+
+
+template <typename F, typename... Args>
+auto createTask(F f, Args&&... args) {
+    std::packaged_task<std::remove_pointer_t<F>> ptsk{f};
+    auto fut = ptsk.get_future();
+    thread_queue::task_t tsk {
+        [ct = std::move(ptsk), 
+        args = std::make_tuple(std::forward<Args>(args)...)]() 
+        mutable {
+            std::apply(
+                [ct = std::move(ct)] (auto&&... args) mutable {
+                    ct(args...);
+                },
+                std::move(args)
+            );
+            return 0;
+        }
+    };
+    return std::make_pair{ std::move(tsk), std::move(fut) };
+}
+
+enum class Limiter : int { STOP = -1 };
+
+template <typename T> T GetLimiter();
+
+template <> 
+thread_queue::task_t GetLimiter<thread_queue::task_t>() {
+    thread_queue::task_t stop([] {return Limiter::STOP;})
+    return std::move(tsk);
+} 
 
 }
 
