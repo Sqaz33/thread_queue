@@ -2,6 +2,7 @@
 #define INCLUDED_THREAD_QUEUE_HPP
 
 #include <condition_variable>
+#include <future>
 #include <functional>
 #include <mutex>
 #include <queue>
@@ -15,14 +16,14 @@ class UnboundedQueue {
 public:
     bool empty() const noexcept;
 
-    void push(task_t&& task);
+    void pushTask(task_t&& task);
 
     void waitNPop(task_t& task);
 
     void done();
 
 private:
-    std::mutex qmut_; 
+    mutable std::mutex qmut_; 
     std::condition_variable condCons_;
     std::queue<task_t> queue_;
 };
@@ -30,9 +31,9 @@ private:
 
 template <typename F, typename... Args>
 auto createTask(F f, Args&&... args) {
-    std::packaged_task<std::remove_pointer_t<F>> ptsk{f};
+    std::packaged_task<std::remove_pointer_t<F>> ptsk(f);
     auto fut = ptsk.get_future();
-    thread_queue::task_t tsk {
+    task_t tsk {
         [ct = std::move(ptsk), 
         args = std::make_tuple(std::forward<Args>(args)...)]() 
         mutable {
@@ -45,21 +46,22 @@ auto createTask(F f, Args&&... args) {
             return 0;
         }
     };
-    return std::make_pair{ std::move(tsk), std::move(fut) };
+    return std::make_pair( std::move(tsk), std::move(fut) );
 }
 
 enum class Limiter : int { STOP = -1 };
+
 
 template <typename T> T GetLimiter();
 
 template <> 
 thread_queue::task_t GetLimiter<thread_queue::task_t>() {
-    thread_queue::task_t stop([] {return Limiter::STOP;})
-    return std::move(tsk);
+    auto t = [] () { return static_cast<int>(Limiter::STOP); };
+    thread_queue::task_t stop(t);
+    return std::move(stop);
 } 
 
 }
-
 
 #endif // INCLUDED_THREAD_QUEUE_HPP
 

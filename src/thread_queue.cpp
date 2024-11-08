@@ -12,7 +12,7 @@ bool UnboundedQueue::empty() const noexcept {
     return queue_.empty();
 }
 
-void UnboundedQueue::push(task_t&& task) {
+void UnboundedQueue::pushTask(task_t&& task) {
     std::lock_guard<std::mutex> lk{qmut_};
     queue_.push(std::move(task));
     condCons_.notify_one();

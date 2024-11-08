@@ -1,5 +1,6 @@
 #include <iostream>
 #include <exception>
+#include <thread>
 
 int main() try {
     std::cout << "Hi from main.cpp\n";
