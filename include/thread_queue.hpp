@@ -16,7 +16,7 @@ class UnboundedQueue {
 public:
     bool empty() const noexcept;
 
-    void pushTask(task_t&& task);
+    void push(task_t&& task);
 
     void waitNPop(task_t& task);
 
@@ -28,12 +28,11 @@ private:
     std::queue<task_t> queue_;
 };
 
-
 template <typename F, typename... Args>
 auto createTask(F f, Args&&... args) {
-    std::packaged_task<std::remove_pointer_t<F>> ptsk(f);
+    std::packaged_task<std::remove_pointer_t<F>> ptsk{f};
     auto fut = ptsk.get_future();
-    task_t tsk {
+    task_t tsk (
         [ct = std::move(ptsk), 
         args = std::make_tuple(std::forward<Args>(args)...)]() 
         mutable {
@@ -45,23 +44,15 @@ auto createTask(F f, Args&&... args) {
             );
             return 0;
         }
-    };
+    );
     return std::make_pair( std::move(tsk), std::move(fut) );
 }
 
 enum class Limiter : int { STOP = -1 };
 
-
 template <typename T> T GetLimiter();
 
-template <> 
-thread_queue::task_t GetLimiter<thread_queue::task_t>() {
-    auto t = [] () { return static_cast<int>(Limiter::STOP); };
-    thread_queue::task_t stop(t);
-    return std::move(stop);
-} 
-
-}
+} // namespace thread_queue
 
 #endif // INCLUDED_THREAD_QUEUE_HPP
 
