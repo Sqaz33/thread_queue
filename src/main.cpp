@@ -14,7 +14,8 @@ void consumerWork() {
     using namespace thread_queue;
     task_t t;
     q.waitNPop(t);
-    t();
+    int stop = std::move(t)();
+    if (stop) q.wakeUpAllConsumer();
 }
 
 void produserWork() {
@@ -24,11 +25,9 @@ void produserWork() {
     std::cout << fut.get() << '\n';
 }
 
-
 int main() try {
     std::vector<std::thread> vt;
     
-
     std::thread consumer(consumerWork);
     std::thread produser(produserWork);
 
@@ -36,4 +35,4 @@ int main() try {
     produser.join();
 } 
 catch(const std::exception& e) { std::cout << e.what() << '\n'; }
-catch(...) { std::cout << "!!!\n"; }
+catch(...) { std::cout << "Unknow error.\n"; }

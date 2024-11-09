@@ -20,7 +20,7 @@ public:
 
     void waitNPop(task_t& task);
 
-    void done();
+    void wakeUpAllConsumer();
 
 private:
     mutable std::mutex qmut_; 

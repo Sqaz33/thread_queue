@@ -8,11 +8,11 @@
 namespace thread_queue {
 
 template <> 
-task_t GetLimiter<task_t>() {
+task_t getLimiter<task_t>() {
     auto t = [] () { return static_cast<int>(Limiter::STOP); };
     thread_queue::task_t stop(t);
     return std::move(stop);
-} 
+}
 
 bool UnboundedQueue::empty() const noexcept {
     std::lock_guard<std::mutex> lk{qmut_};
@@ -32,8 +32,8 @@ void UnboundedQueue::waitNPop(task_t& task) {
     task = std::move(frnt);
 }
 
-void UnboundedQueue::done() {
-    queue_.push(GetLimiter<task_t>());
+void UnboundedQueue::wakeUpAllConsumer() {
+    queue_.push(getLimiter<task_t>());
     condCons_.notify_all();
 }
 
