@@ -26,6 +26,9 @@ void produserWork() {
 
 
 int main() try {
+    std::vector<std::thread> vt;
+    
+
     std::thread consumer(consumerWork);
     std::thread produser(produserWork);
 

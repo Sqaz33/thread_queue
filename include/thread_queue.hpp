@@ -50,7 +50,7 @@ auto createTask(F f, Args&&... args) {
 
 enum class Limiter : int { STOP = -1 };
 
-template <typename T> T GetLimiter();
+template <typename T> T getLimiter();
 
 } // namespace thread_queue
 

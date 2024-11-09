@@ -29,13 +29,10 @@ void UnboundedQueue::waitNPop(task_t& task) {
     std::unique_lock<std::mutex> lk{qmut_};
     condCons_.wait(lk, [this]{ return !queue_.empty(); });
     decltype(auto) frnt = std::move(queue_.front());
-    //TODO:
-    // if (what) { return; }
     task = std::move(frnt);
 }
 
 void UnboundedQueue::done() {
-    //TODO: что использовать в качестве Limiter?
     queue_.push(GetLimiter<task_t>());
     condCons_.notify_all();
 }
